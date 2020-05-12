@@ -86,6 +86,7 @@ Terrain::Terrain(Game* game) {
 }
 
 void Terrain::GetMaskTextures() {
+	blending_masks.push_back(game->texturemanager->LoadSurface("Textures/Mask_entire.png"));
 	blending_masks.push_back(game->texturemanager->LoadSurface("Textures/Mask_top.png"));
 	blending_masks.push_back(game->texturemanager->LoadSurface("Textures/Mask_top_left.png"));
 	blending_masks.push_back(game->texturemanager->LoadSurface("Textures/Mask_left.png"));
@@ -146,13 +147,14 @@ void Terrain::Buffer() {
 void Terrain::AddTexture(const char* texturepath) {
 	SDL_Surface* mainsurface = game->texturemanager->LoadSurface(texturepath);
 	SDL_Texture* maintexture = game->texturemanager->LoadTexture(texturepath);
+
 	std::vector<std::vector<std::vector<SDL_Texture*>>> tempXvec;
 	for (int x = 0; x < tiledivider; x++) {
 		std::vector<std::vector<SDL_Texture*>> tempYvec;
 		for (int y = 0; y < tiledivider; y++) {
 			std::vector<SDL_Texture*> tempTextures;
 
-			SDL_Texture* nofadetexture= SDL_CreateTexture(renderer, SDL_PIXELFORMAT_UNKNOWN, SDL_TEXTUREACCESS_TARGET, width / tiledivider, smalltile);
+			SDL_Texture* nofadetexture= SDL_CreateTexture(renderer, SDL_PIXELFORMAT_UNKNOWN, SDL_TEXTUREACCESS_TARGET, width / tiledivider, smalltile); //Copy part of tile to another texture
 			SDL_SetRenderTarget(renderer, nofadetexture);
 			SDL_Rect temprect;
 			temprect.x = width / tiledivider * x;
@@ -160,12 +162,12 @@ void Terrain::AddTexture(const char* texturepath) {
 			temprect.w = width / tiledivider;
 			temprect.h = smalltile;
 			SDL_RenderCopy(renderer, maintexture, &temprect, NULL);
-
 			tempTextures.push_back(nofadetexture);
 
-			
-			Uint32 rmask, gmask, bmask, amask;
 
+
+			
+			Uint32 rmask, gmask, bmask, amask; //Copy part of tile to another surface
 			/* SDL interprets each pixel as a 32-bit number, so our masks must depend
 			   on the endianness (byte order) of the machine */
 			#if SDL_BYTEORDER == SDL_BIG_ENDIAN
@@ -179,19 +181,28 @@ void Terrain::AddTexture(const char* texturepath) {
 						bmask = 0x00ff0000;
 						amask = 0xff000000;
 			#endif
-
 			SDL_Surface* partsurface = SDL_CreateRGBSurface(0, temprect.w, temprect.h, 32, rmask, gmask, bmask, amask);
 			SDL_BlitSurface(mainsurface, &temprect, partsurface, NULL);
-			for (int texture = 1; texture < blending_masks.size()+1; texture++) {
-				//SDL_Texture* temptexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_UNKNOWN, SDL_TEXTUREACCESS_TARGET, width/tiledivider, smalltile);
+
+
+
+			for (int mask = 0; mask < blending_masks.size(); mask++) {
+				SDL_Surface* tempblendingmask = SDL_CreateRGBSurface(0, temprect.w, temprect.h, 32, rmask, gmask, bmask, amask);
+				//SDL_Rect tempsrcrect{ 100,100,1000,1000 };
+				SDL_BlitScaled(blending_masks[mask], NULL, tempblendingmask, NULL);
+
 				SDL_Texture* temptexture = NULL;
-				SDL_SetRenderTarget(renderer, temptexture);
-				
-				//SDL_RenderCopy(renderer, game->texturemanager->ComposeMaskTexture(partsurface, blending_masks[texture], game->window), &temprect, NULL);
-				//SDL_RenderCopy(renderer, blending_masks[texture-1], NULL, NULL);sddwd
-
-
+				game->texturemanager->ComposeTexture(tempblendingmask, partsurface, &temptexture);
+				SDL_BlitScaled(partsurface, NULL, SDL_GetWindowSurface(game->window), NULL);
+				/*SDL_UpdateWindowSurface(game->window);
+				SDL_FillRect(SDL_GetWindowSurface(game->window), NULL, 0x000000);*/
+				//std::cout << tempblendingmask->h << partsurface->h << std::endl;
+				/*SDL_SetRenderTarget(renderer, NULL);
+				SDL_RenderCopy(renderer, temptexture, NULL, NULL);
+				SDL_RenderPresent(renderer);*/
+				//SDL_Delay(1000);
 				tempTextures.push_back(temptexture);
+				//std::cout << "Composing: " << mask << std::endl;
 			}
 			tempYvec.push_back(tempTextures);
 		}
@@ -223,7 +234,7 @@ void Terrain::CopyTilesToTexture() {
 		for (int dstrect_x = 0; dstrect_x < tiles_coloumns; dstrect_x++) {
 			int xpart = dstrect_x % tiledivider;
 			for (int terrainnum = 0; terrainnum < 2; terrainnum++) {
-				game->texturemanager->CopyTextureToTexture(textures[tiles[terrainnum][dstrect_x][dstrect_y]][xpart][ypart][1], terrain[terrainnum], NULL, &dstrects[dstrect_x][dstrect_y]);
+				game->texturemanager->CopyTextureToTexture(textures[tiles[terrainnum][dstrect_x][dstrect_y]][xpart][ypart][rand()%blending_masks.size()], terrain[terrainnum], NULL, &dstrects[dstrect_x][dstrect_y]);
 			}
 		}
 	}

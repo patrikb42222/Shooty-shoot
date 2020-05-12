@@ -94,30 +94,40 @@ SDL_Texture* TextureManager::LoadMaskTexture(const char* texturepath) {
 }
 
 
-SDL_Texture* TextureManager::ComposeMaskTexture(SDL_Surface* mainSurface, SDL_Surface* maskSurface, SDL_Window* window) {
-	SDL_Surface* composedSurface = mainSurface;
-	SDL_LockSurface(composedSurface);
-	Uint32* mainPixels = (Uint32*)composedSurface->pixels;
-	int mainCols = composedSurface->pitch;
-	SDL_LockSurface(maskSurface);
-	Uint32* maskPixels = (Uint32*)maskSurface->pixels;
-	int maskCols = maskSurface->w;
-	int maskRows = maskSurface->h;
+void TextureManager::ComposeTexture(SDL_Surface* alphaSurface, SDL_Surface* mainSurface, SDL_Texture** output) {
+	SDL_PixelFormat* format = SDL_AllocFormat(SDL_PIXELFORMAT_RGBA8888);
+	SDL_Surface* alphaCopy = SDL_ConvertSurface(alphaSurface, format, 0);
+	SDL_Surface* mainCopy = SDL_ConvertSurface(mainSurface, format, 0);
 
-	for (int pixel = 0; pixel < maskCols; pixel++) {
-		mainPixels[pixel] = SDL_MapRGBA(SDL_GetWindowSurface(window)->format, 0xAA, 0xAA, 0xAA, 0xAA);
+	SDL_LockSurface(mainCopy);
+	Uint32* alphapixels = (Uint32*)alphaCopy->pixels;
+	Uint32* dstpixels = (Uint32*)mainCopy->pixels;
+	SDL_SetSurfaceBlendMode(mainCopy, SDL_BLENDMODE_BLEND);
+	for (int y = 0; y < mainCopy->h; y++) {
+		for (int x = 0; x < mainCopy->w; x++) {
+				Uint8 alphaPixel[4];
+			Uint8 dstPixel[4];
+			SDL_GetRGBA(alphapixels[x + y * mainCopy->w], format, &alphaPixel[0], &alphaPixel[1], &alphaPixel[2], &alphaPixel[3]);
+			SDL_GetRGBA(dstpixels[x + y * mainCopy->w], format, &dstPixel[0], &dstPixel[1], &dstPixel[2], &dstPixel[3]);
+			dstpixels[x + y * mainCopy->w] = SDL_MapRGBA(SDL_AllocFormat(SDL_PIXELFORMAT_RGBA8888), dstPixel[0], dstPixel[1], dstPixel[2], alphaPixel[3]);
+			//dstpixels[x + y * mainCopy->w] = SDL_MapRGBA(SDL_AllocFormat(SDL_PIXELFORMAT_RGBA8888), alphaPixel[0], 0, alphaPixel[2], alphaPixel[3]);
+		}
 	}
+	SDL_UnlockSurface(mainCopy);
 
-	SDL_UnlockSurface(mainSurface);
-	SDL_UnlockSurface(maskSurface);
+	/*SDL_SetRenderTarget(renderer, NULL);
+	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+	SDL_RenderClear(renderer);
+	SDL_RenderCopy(renderer, SDL_CreateTextureFromSurface(renderer, mainCopy), NULL, NULL);
+	SDL_RenderPresent(renderer);
+	SDL_Delay(1000);*/
 
-	SDL_BlitSurface(composedSurface, NULL, SDL_GetWindowSurface(window), NULL);
-	SDL_UpdateWindowSurface(window);
-	SDL_Delay(10000);
 
-	SDL_Texture* texture = NULL;
-	texture = SDL_CreateTextureFromSurface(renderer, composedSurface);
-	return texture;
+	SDL_DestroyTexture(*output);
+	SDL_FreeFormat(format);
+	*output = SDL_CreateTextureFromSurface(renderer, mainCopy);
+	SDL_FreeSurface(alphaCopy);
+	SDL_FreeSurface(mainCopy);
 }
 
 void TextureManager::CopyTextureToTexture(SDL_Texture* srctexture, SDL_Texture* dsttexture, SDL_Rect* srcrect, SDL_Rect* dstrect) {

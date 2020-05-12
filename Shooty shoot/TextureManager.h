@@ -12,7 +12,7 @@ public:
 	SDL_Surface* LoadSurface(const char* texturepath);
 	SDL_Texture* LoadTextureWithTransparency(const char* texturepath, Uint8 R, Uint8 G, Uint8 B);
 	SDL_Texture* LoadMaskTexture(const char* texturepath);
-	SDL_Texture* ComposeMaskTexture(SDL_Surface* mainSurface, SDL_Surface* maskSurface, SDL_Window* window);
+	void ComposeTexture(SDL_Surface* alphaSurface, SDL_Surface* mainSurface, SDL_Texture** output);
 	void CopyTextureToTexture(SDL_Texture* srctexture, SDL_Texture* dsttexture, SDL_Rect* srcrect, SDL_Rect* dstrect);
 	void ResetRenderTarget();
 	void GetTextureWH(SDL_Texture* texture, int* w, int* h);

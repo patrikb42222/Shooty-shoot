@@ -18,7 +18,7 @@ void Game::Initialize(TextureManager* texturemanager) {
 		printf("Initialized!\n");
 	}
 	//window = SDL_CreateWindow("Shooty shoot", 500, 500, 1920, 1080, SDL_WINDOW_FULLSCREEN_DESKTOP);
-	window = SDL_CreateWindow("Shooty shoot", 500, 500, 1920, 1080, SDL_WINDOW_SHOWN);
+	window = SDL_CreateWindow("Shooty shoot", 200, 200, 600, 600, SDL_WINDOW_SHOWN);
 
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
 	if (renderer == NULL)
