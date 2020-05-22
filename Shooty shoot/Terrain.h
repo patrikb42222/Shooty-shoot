@@ -24,23 +24,24 @@ public:
 	double tilemultiplier=1;
 	int tiledivider = 12;
 
-	int width = 256/tilemultiplier;
-	int height = 256/tilemultiplier;
+	int width = (256/(tiledivider+1)*tiledivider)/tilemultiplier; //resizes the full textures to be devisible by tiledivider, and not be larger
+	int height = (256/(tiledivider+1)*tiledivider)/tilemultiplier;
 
 	double speed = 1;
 	int tiles_coloumns;
 	int tiles_rows;
 	std::vector<std::vector<std::vector<int>>> tiles;
 	double distance_travelled = 0;
-	int last_distance_travelled = 0;
+	int last_distance_travelled = distance_travelled;
 	std::vector<SDL_Texture*> terrain; //2 images for terrain
 	double precisey;
-	double smalltile = height / tiledivider;
+	double smalltile_width = width / tiledivider;
+	double smalltile_height = height / tiledivider;
 private:
 	std::vector<std::vector<std::vector<double>>> precise_coords;
 
 	int offset_x = 100/tilemultiplier*0;
-	int offset_y = 64/tilemultiplier*0;
+	int offset_y = 64/tilemultiplier*0+smalltile_height;
 	SDL_Renderer* renderer;
 	int parts;
 
@@ -48,8 +49,8 @@ private:
 	std::vector<SDL_Surface*> blending_masks;
 
 	std::vector<SDL_Rect> terraindsts;
-	short currentterrain = 1;
-	int line= 0;
+	short currentterrain = 0;
+	int line= 1;
 
 	std::vector<std::vector<std::vector<std::vector<SDL_Texture*>>>> textures; 
 	/*A list containing lists for each grass texture. 

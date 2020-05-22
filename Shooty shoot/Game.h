@@ -5,6 +5,7 @@
 #include <SDL_image.h>
 #include "Texturemanager.h"
 #include "Hull.h"
+#include <SDL_thread.h>
 
 
 
@@ -30,7 +31,7 @@ class Game
 		const Uint8* keyboardstate = SDL_GetKeyboardState(NULL);
 
 		bool running;
-		int max_fps = 200;
+		int max_fps = 60;
 		int min_mspf = 1000 / max_fps;
 		int last_time = SDL_GetTicks();
 		double mspf = 60;

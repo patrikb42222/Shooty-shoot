@@ -8,9 +8,8 @@ Terrain::Terrain(Game* game) {
 	srand(SDL_GetTicks());
 
 
-
-	tiles_coloumns = game->texturemanager->resolution[0] / (width / tiledivider) + 2;
-	tiles_rows = game->texturemanager->resolution[1] / smalltile;
+	tiles_coloumns = game->texturemanager->resolution[0] / (smalltile_width) + 2;
+	tiles_rows = game->texturemanager->resolution[1] / smalltile_height+1;
 
 
 
@@ -21,9 +20,9 @@ Terrain::Terrain(Game* game) {
 		SDL_Rect tempdst;
 		terraindsts.push_back(tempdst);
 		terraindsts[terraindst].w = tiles_coloumns * width / tiledivider;
-		terraindsts[terraindst].h = tiles_rows * (smalltile);
-		terraindsts[terraindst].x = -width / tiledivider;
-		terraindsts[terraindst].y = terraindst * terraindsts[terraindst].h;
+		terraindsts[terraindst].h = tiles_rows*height/tiledivider;
+		terraindsts[terraindst].x = -width / tiledivider - offset_x;
+		terraindsts[terraindst].y = terraindst * terraindsts[terraindst].h - offset_y;
 		terrain.push_back(SDL_CreateTexture(renderer, SDL_PIXELFORMAT_UNKNOWN, SDL_TEXTUREACCESS_TARGET, terraindsts[terraindst].w, terraindsts[terraindst].h));
 		precisey = terraindsts[terraindst].y;
 
@@ -61,23 +60,13 @@ Terrain::Terrain(Game* game) {
 	for (int dstrect_y = 0; dstrect_y < tiles_rows; dstrect_y++) {
 		for (int dstrect_x = 0; dstrect_x < tiles_coloumns; dstrect_x++) {
 				
-			dstrects[dstrect_x][dstrect_y].x = width * dstrect_x / tiledivider - offset_x;
-			dstrects[dstrect_x][dstrect_y].y = height * dstrect_y / tiledivider - offset_y;
+			dstrects[dstrect_x][dstrect_y].x = width * dstrect_x / tiledivider;
+			dstrects[dstrect_x][dstrect_y].y = height * dstrect_y / tiledivider;
 			precise_coords[dstrect_x][dstrect_y][0] = dstrects[dstrect_x][dstrect_y].x;
 			precise_coords[dstrect_x][dstrect_y][1] = dstrects[dstrect_x][dstrect_y].y;
 		
-			if (dstrect_x % 3 == 2) {
-				dstrects[dstrect_x][dstrect_y].w = width / tiledivider + 1;
-			}
-			else {
-				dstrects[dstrect_x][dstrect_y].w = width / tiledivider;
-			}
-			if (dstrect_y % 3 == 2) {
-				dstrects[dstrect_x][dstrect_y].h = smalltile + 1;
-			}
-			else {
-				dstrects[dstrect_x][dstrect_y].h = smalltile;
-			}
+			dstrects[dstrect_x][dstrect_y].w = smalltile_width;
+			dstrects[dstrect_x][dstrect_y].h = smalltile_height;
 		}
 	}
 
@@ -127,18 +116,19 @@ void Terrain::Buffer() {
 			currentterrain = 1;
 		}
 	}
-	if ((last_distance_travelled+1000) / smalltile < (int)(distance_travelled) / smalltile) {
-		int diff = (int)distance_travelled / smalltile - (last_distance_travelled+1000) / smalltile;
+	if (((last_distance_travelled) / smalltile_height) < (int)(distance_travelled / smalltile_height)) {
+		int diff = (int)(distance_travelled / smalltile_height) - ((last_distance_travelled) / smalltile_height);
 		int min = line - diff+1;
 		for (line; line >= min; line--) {
 			if (line == 0) {
 				line += tiles_rows;
 				min += tiles_rows;
+				//currentterrain = !currentterrain; 
 			}
 			//std::cout << "Loading line: " << line - 1 << std::endl;
 			LoadLine(line-1);
+			last_distance_travelled += (diff)*smalltile_height;
 		}
-		last_distance_travelled += diff * smalltile;
 	}
 	game->texturemanager->ResetRenderTarget();
 		
@@ -154,13 +144,13 @@ void Terrain::AddTexture(const char* texturepath) {
 		for (int y = 0; y < tiledivider; y++) {
 			std::vector<SDL_Texture*> tempTextures;
 
-			SDL_Texture* nofadetexture= SDL_CreateTexture(renderer, SDL_PIXELFORMAT_UNKNOWN, SDL_TEXTUREACCESS_TARGET, width / tiledivider, smalltile); //Copy part of tile to another texture
+			SDL_Texture* nofadetexture= SDL_CreateTexture(renderer, SDL_PIXELFORMAT_UNKNOWN, SDL_TEXTUREACCESS_TARGET, width / tiledivider, smalltile_height); //Copy part of tile to another texture
 			SDL_SetRenderTarget(renderer, nofadetexture);
 			SDL_Rect temprect;
-			temprect.x = width / tiledivider * x;
-			temprect.y = smalltile * y;
-			temprect.w = width / tiledivider;
-			temprect.h = smalltile;
+			temprect.x = smalltile_width * x;
+			temprect.y = smalltile_height * y;
+			temprect.w = smalltile_width;
+			temprect.h = smalltile_height;
 			SDL_RenderCopy(renderer, maintexture, &temprect, NULL);
 			tempTextures.push_back(nofadetexture);
 
@@ -185,24 +175,15 @@ void Terrain::AddTexture(const char* texturepath) {
 			SDL_BlitSurface(mainsurface, &temprect, partsurface, NULL);
 
 
-
 			for (int mask = 0; mask < blending_masks.size(); mask++) {
 				SDL_Surface* tempblendingmask = SDL_CreateRGBSurface(0, temprect.w, temprect.h, 32, rmask, gmask, bmask, amask);
-				//SDL_Rect tempsrcrect{ 100,100,1000,1000 };
 				SDL_BlitScaled(blending_masks[mask], NULL, tempblendingmask, NULL);
 
 				SDL_Texture* temptexture = NULL;
 				game->texturemanager->ComposeTexture(tempblendingmask, partsurface, &temptexture);
-				SDL_BlitScaled(partsurface, NULL, SDL_GetWindowSurface(game->window), NULL);
-				/*SDL_UpdateWindowSurface(game->window);
-				SDL_FillRect(SDL_GetWindowSurface(game->window), NULL, 0x000000);*/
-				//std::cout << tempblendingmask->h << partsurface->h << std::endl;
-				/*SDL_SetRenderTarget(renderer, NULL);
-				SDL_RenderCopy(renderer, temptexture, NULL, NULL);
-				SDL_RenderPresent(renderer);*/
-				//SDL_Delay(1000);
 				tempTextures.push_back(temptexture);
-				//std::cout << "Composing: " << mask << std::endl;
+
+				game->HandleEvents();
 			}
 			tempYvec.push_back(tempTextures);
 		}
@@ -246,7 +227,8 @@ void Terrain::LoadLine(int dstrect_y) {
 	int ypart = dstrect_y % tiledivider;
 	for (int dstrect_x = 0; dstrect_x < tiles_coloumns; dstrect_x++) {
 		int xpart = dstrect_x % tiledivider;
-		tiles[!currentterrain][dstrect_x][dstrect_y] = rand() % textures.size();
+		//tiles[!currentterrain][dstrect_x][dstrect_y] = rand() % (textures.size());
+		tiles[!currentterrain][dstrect_x][dstrect_y] = dstrect_y%textures.size();
 		game->texturemanager->CopyTextureToTexture(textures[tiles[!currentterrain][dstrect_x][dstrect_y]][xpart][ypart][!currentterrain], terrain[!currentterrain], NULL, &dstrects[dstrect_x][dstrect_y]);
 	}
 }
