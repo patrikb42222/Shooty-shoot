@@ -9,6 +9,7 @@ class Prop
 {
 	public:
 		Prop(int dist, int x, int y, int width, int height, int INframes, const char* texturepath, Game* game, Terrain* terrain);
+		Prop(int dist, int x, int y, int INframes, const char* texturepath, Game* game, Terrain* terrain);
 		~Prop();
 		bool OnScreen();
 		bool Behind();
@@ -18,6 +19,7 @@ class Prop
 		void Move(int x, int y);
 		void AddHeightRect(int x, int y, int w, int h, double height);
 		double GetHeight(int x, int y);
+		void SetSize(int w, int h);
 		SDL_Rect dstrect;
 		int dist;
 		Terrain* terrain;

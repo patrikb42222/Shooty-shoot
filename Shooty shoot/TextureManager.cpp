@@ -55,7 +55,7 @@ SDL_Texture* TextureManager::LoadTextureWithTransparency(const char* texturepath
 	return texture;
 }
 
-SDL_Texture* TextureManager::LoadMaskTexture(const char* texturepath) {
+/*SDL_Texture* TextureManager::LoadMaskTexture(const char* texturepath) {
 	SDL_Texture* temptexture = NULL;
 	temptexture = IMG_LoadTexture(renderer, texturepath);
 	if (temptexture == NULL) {
@@ -91,7 +91,7 @@ SDL_Texture* TextureManager::LoadMaskTexture(const char* texturepath) {
 	}
 	SDL_SetRenderTarget(renderer, NULL);
 	return texture;
-}
+}*/
 
 
 void TextureManager::ComposeTexture(SDL_Surface* alphaSurface, SDL_Surface* mainSurface, SDL_Texture** output) {
@@ -142,3 +142,4 @@ void TextureManager::ResetRenderTarget() {
 void TextureManager::GetTextureWH(SDL_Texture* texture, int* w, int* h) {
 	SDL_QueryTexture(texture, NULL, NULL, w, h);
 }
+

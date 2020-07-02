@@ -14,12 +14,15 @@ void Mission::mission1(Game* game) {
 	std::vector<Prop*> proplist;
 
 	
-	//proplist.push_back(new Prop(20, 0, 0, 1920, 1080, 1, "Textures/River.png", game, &terrain));
-	//proplist[0]->AddHeightRect(0, 300, 1920, 550, 0.4);
+	
 	proplist.push_back(new Prop(100, 0, 0, 300, 500, 1, "Textures/Ramp.png", game, &terrain));
 	proplist[0]->AddHeightRect(0, 0, 300, 100, 1.6);
 	proplist[0]->AddHeightRect(0, 100, 300, 100, 1.4);
 	proplist[0]->AddHeightRect(0, 200, 300, 100, 1.2);
+
+	proplist.push_back(new Prop(135, 0, 0, 1, "Textures/River.png", game, &terrain));
+	proplist.push_back(new Prop(0, 750, 1400, 1 ,"Textures/Arms_dealer.png", game, &terrain));
+	proplist[2]->SetSize(737*0.7, 504*0.7);
 
 	Cloud clouds = Cloud(game);
 

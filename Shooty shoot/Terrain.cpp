@@ -228,7 +228,7 @@ void Terrain::LoadLine(int dstrect_y) {
 	for (int dstrect_x = 0; dstrect_x < tiles_coloumns; dstrect_x++) {
 		int xpart = dstrect_x % tiledivider;
 		//tiles[!currentterrain][dstrect_x][dstrect_y] = rand() % (textures.size());
-		tiles[!currentterrain][dstrect_x][dstrect_y] = dstrect_y%textures.size();
+		tiles[!currentterrain][dstrect_x][dstrect_y] = dstrect_y%height<height/2;
 		game->texturemanager->CopyTextureToTexture(textures[tiles[!currentterrain][dstrect_x][dstrect_y]][xpart][ypart][!currentterrain], terrain[!currentterrain], NULL, &dstrects[dstrect_x][dstrect_y]);
 	}
 }

@@ -35,6 +35,39 @@ Prop::Prop(int dist, int x, int y, int width, int height, int INframes, const ch
 	this->dist = dist*(terrain->height/terrain->tiledivider);
 }
 
+Prop::Prop(int dist, int x, int y, int INframes, const char* texturepath, Game* game, Terrain* terrain)
+{
+	srcrects = new SDL_Rect[INframes];
+	dstrect = SDL_Rect();
+	this->game = game;
+
+	frames = INframes;
+
+
+	texture = NULL;
+
+	texture = game->texturemanager->LoadTextureWithTransparency(texturepath, 0xFF, 0x00, 0xFF);
+
+
+	for (int frame = 0; frame < frames; frame++) {
+		game->texturemanager->GetTextureWH(texture, &srcrects[frame].w, &srcrects[frame].h);
+		srcrects[frame].x = frame * srcrects->w;
+		srcrects[frame].y = 0;
+	}
+
+	game->texturemanager->GetTextureWH(texture, &dstrect.w, &dstrect.h);
+	dstrect.x = x;
+	dstrect.y = y - dstrect.h;
+	this->y = y;
+	precise_coords.push_back(dstrect.x);
+	precise_coords.push_back(dstrect.y);
+
+
+	this->terrain = terrain;
+	this->renderer = game->texturemanager->renderer;
+	this->dist = dist * (terrain->height / terrain->tiledivider);
+}
+
 Prop::~Prop() {
 	SDL_DestroyTexture(texture);
 	printf("Deleting prop...");
@@ -96,9 +129,14 @@ void Prop::AddHeightRect(int x, int y, int w, int h, double height) {
 double Prop::GetHeight(int x, int y) {
 	for (int height = 0; height < heights.size(); height++) {
 		if (game->PointInRect(&heightrects[height], x, y)) {
-			std::cout << "Height:" << heights[height] << std::endl;
 			return heights[height];
 		}
 	}
 	return 0;
+}
+
+
+void Prop::SetSize(int w, int h) {
+	dstrect.w = w;
+	dstrect.h = h;
 }
