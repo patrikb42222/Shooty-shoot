@@ -15,17 +15,19 @@ public:
 	void Draw();
 	void Move();
 	void Buffer();
-	void AddTexture(const char* texturepath);
+	void AddTexture(const char* texturepath, SDL_Color color);
+	void AddTerrain(const char* texturepath);
+	void LoadTerrainCache(TextureManager texturemanager);
 	void RandomizeTerrain();
 	void CopyTilesToTexture();
+	void CopyTerrainFromCache(int terrain, TextureManager texturemanager);
 	void LoadLine(int dstrect_y);
 	std::vector<std::vector<SDL_Rect>> dstrects;
 
-	double tilemultiplier=1;
-	int tiledivider = 12;
+	int tiledivider = 4;
 
-	int width = (256/(tiledivider+1)*tiledivider)/tilemultiplier; //resizes the full textures to be devisible by tiledivider, and not be larger
-	int height = (256/(tiledivider+1)*tiledivider)/tilemultiplier;
+	int width = 256; //resizes the full textures to be devisible by tiledivider, and not be larger
+	int height = 256;
 
 	double speed = 1;
 	int tiles_coloumns;
@@ -33,15 +35,16 @@ public:
 	std::vector<std::vector<std::vector<int>>> tiles;
 	double distance_travelled = 0;
 	int last_distance_travelled = distance_travelled;
-	std::vector<SDL_Texture*> terrain; //2 images for terrain
+	std::vector<SDL_Texture*> terrain_BigTextures; //2 images for terrain
 	double precisey;
 	double smalltile_width = width / tiledivider;
 	double smalltile_height = height / tiledivider;
+	std::vector<const char*> terrainPaths;
+	std::vector<SDL_Color> terrainColors;
+	std::vector<SDL_Texture*> terrainCache;
 private:
 	std::vector<std::vector<std::vector<double>>> precise_coords;
 
-	int offset_x = 100/tilemultiplier*0;
-	int offset_y = 64/tilemultiplier*0+smalltile_height;
 	SDL_Renderer* renderer;
 	int parts;
 
@@ -52,6 +55,7 @@ private:
 	short currentterrain = 0;
 	int line= 1;
 
+	/////////////XXXXXXXXXXXYYYYYYYYYYYTTTTTTTTTTTT////////////////////////////
 	std::vector<std::vector<std::vector<std::vector<SDL_Texture*>>>> textures; 
 	/*A list containing lists for each grass texture. 
 	each list contains a list for the x dimension

@@ -7,10 +7,13 @@ void Mission::mission1(Game* game) {
 	Hull bike = Hull(0, 0, 68/2, 141/2, 3, "Textures/Bike.png", *game->texturemanager);
 	Terrain terrain = Terrain(game);
 	terrain.GetMaskTextures();
-	terrain.AddTexture("Textures/TMGras07a.png");
-	terrain.AddTexture("Textures/TMGras08a.png");
-	terrain.AddTexture("Textures/TMGras09a.png");
-	terrain.CopyTilesToTexture();
+	terrain.AddTerrain("Textures/map1.bmp");
+	terrain.AddTexture("Textures/TMGras07a.png", { 255,0,0 });
+	terrain.AddTexture("Textures/TMGras08a.png", { 0,255,0 });
+	terrain.AddTexture("Textures/TMGras09a.png", { 0,0,255 });
+	terrain.LoadTerrainCache(*game->texturemanager);
+	terrain.CopyTerrainFromCache(0, *game->texturemanager);
+	terrain.CopyTerrainFromCache(1, *game->texturemanager);
 	std::vector<Prop*> proplist;
 
 	
@@ -35,6 +38,7 @@ void Mission::mission1(Game* game) {
 		game->HandleEvents();
 		terrain.Move();
 		terrain.Buffer();
+		game->texturemanager->ResetRenderTarget();
 		game->moveHulls(&bike, 1);
 		bike.Fall(0.005);
 		if (game->keyboardstate[SDL_SCANCODE_LCTRL]) {

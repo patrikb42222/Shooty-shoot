@@ -1,5 +1,5 @@
 #include "TextureManager.h"
-
+#include<iostream>
 TextureManager::TextureManager(SDL_Renderer* renderer) {
 	resolution[0] = 1920;
 	resolution[1] = 1080;
@@ -123,7 +123,6 @@ void TextureManager::ComposeTexture(SDL_Surface* alphaSurface, SDL_Surface* main
 	SDL_Delay(1000);*/
 
 
-	SDL_DestroyTexture(*output);
 	SDL_FreeFormat(format);
 	*output = SDL_CreateTextureFromSurface(renderer, mainCopy);
 	SDL_FreeSurface(alphaCopy);

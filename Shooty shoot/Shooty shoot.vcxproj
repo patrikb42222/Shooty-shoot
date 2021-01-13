@@ -76,8 +76,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>D:\Programming\c++\Shooty shoot\Include\SDL_image;D:\Programming\c++\Shooty shoot\Include\SDL2;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\Programming\c++\Shooty shoot\Libs\SDL_image;D:\Programming\c++\Shooty shoot\Libs\SDL2;$(LibraryPath)</LibraryPath>
+    <IncludePath>H:\Shooty shoot\Include\SDL_image;H:\Shooty shoot\Include\SDL2;$(IncludePath)</IncludePath>
+    <LibraryPath>H:\Shooty shoot\Libs\SDL_image;H:\Shooty shoot\Libs\SDL2;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -171,6 +171,9 @@
     <ClInclude Include="Prop.h" />
     <ClInclude Include="Terrain.h" />
     <ClInclude Include="TextureManager.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Image.bmp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

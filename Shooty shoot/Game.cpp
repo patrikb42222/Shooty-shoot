@@ -17,7 +17,7 @@ void Game::Initialize(TextureManager* texturemanager) {
 	else {
 		printf("Initialized!\n");
 	}
-	window = SDL_CreateWindow("Shooty shoot", 500, 500, 1920, 1080, SDL_WINDOW_FULLSCREEN_DESKTOP);
+	window = SDL_CreateWindow("Shooty shoot", 500, 500, 1920, 1080, SDL_WINDOW_FULLSCREEN);
 	//window = SDL_CreateWindow("Shooty shoot", 200, 200, 1920, 1080, SDL_WINDOW_SHOWN);
 
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
@@ -28,6 +28,7 @@ void Game::Initialize(TextureManager* texturemanager) {
 	SDL_SetRenderDrawColor(renderer, 0x00, 0xFF, 0x00, 0xFF);
 	this->texturemanager = texturemanager;
 	texturemanager->SetRenderer(renderer);
+	SDL_RenderSetScale(renderer, 0.75, 0.75);
 	running = true;
 	
 }

@@ -8,8 +8,7 @@ Terrain::Terrain(Game* game) {
 	srand(SDL_GetTicks());
 
 
-	tiles_coloumns = game->texturemanager->resolution[0] / (smalltile_width) + 2;
-	tiles_rows = game->texturemanager->resolution[1] / smalltile_height+1;
+	tiles_coloumns = 32;
 
 
 
@@ -17,13 +16,10 @@ Terrain::Terrain(Game* game) {
 		std::vector<std::vector<int>> temp;
 		tiles.push_back(temp);
 
-		SDL_Rect tempdst;
+		SDL_Rect tempdst = {0,0,1920,0};
 		terraindsts.push_back(tempdst);
-		terraindsts[terraindst].w = tiles_coloumns * width / tiledivider;
-		terraindsts[terraindst].h = tiles_rows*height/tiledivider;
-		terraindsts[terraindst].x = -width / tiledivider - offset_x;
-		terraindsts[terraindst].y = terraindst * terraindsts[terraindst].h - offset_y;
-		terrain.push_back(SDL_CreateTexture(renderer, SDL_PIXELFORMAT_UNKNOWN, SDL_TEXTUREACCESS_TARGET, terraindsts[terraindst].w, terraindsts[terraindst].h));
+		terrain_BigTextures.push_back(NULL);
+		/*terrain_BigTextures.push_back(SDL_CreateTexture(renderer, SDL_PIXELFORMAT_UNKNOWN, SDL_TEXTUREACCESS_TARGET, terraindsts[terraindst].w, terraindsts[terraindst].h));
 		precisey = terraindsts[terraindst].y;
 
 
@@ -33,11 +29,10 @@ Terrain::Terrain(Game* game) {
 				tempX.push_back(0);
 			}
 			tiles[terraindst].push_back(tempX);
-		}
+		}*/
 
 
-
-		for (int dstrect_x = 0; dstrect_x < tiles_coloumns; dstrect_x++) {
+		/*for (int dstrect_x = 0; dstrect_x < tiles_coloumns; dstrect_x++) {
 			std::vector<SDL_Rect> tempVector;
 
 			std::vector<std::vector<double>> tempCoordVector;
@@ -54,7 +49,7 @@ Terrain::Terrain(Game* game) {
 			dstrects.push_back(tempVector);
 
 			precise_coords.push_back(tempCoordVector);
-		}
+		}*/
 	}
 
 	for (int dstrect_y = 0; dstrect_y < tiles_rows; dstrect_y++) {
@@ -88,7 +83,9 @@ void Terrain::GetMaskTextures() {
 
 void Terrain::Draw() {
 	for (int terraindst = 0; terraindst < terraindsts.size(); terraindst++) {
-		SDL_RenderCopy(renderer, terrain[terraindst], NULL, &terraindsts[terraindst]);
+		SDL_RenderCopy(renderer, terrain_BigTextures[terraindst], NULL, &terraindsts[terraindst]);
+		//SDL_RenderCopy(renderer, terrainCache[0], NULL, &terraindsts[terraindst]);
+		std::cout << "XYWH = " << terraindsts[terraindst].x << " " << terraindsts[terraindst].y << " " << terraindsts[terraindst].w << " " << terraindsts[terraindst].h << std::endl;
 	}
 }
 
@@ -108,7 +105,7 @@ void Terrain::Move() {
 
 void Terrain::Buffer() {
 	if (terraindsts[currentterrain].y > game->texturemanager->resolution[1]) {
-		precisey -= terraindsts[1].h;
+		precisey -= terraindsts[currentterrain].h;
 		if (currentterrain == 1) {
 			currentterrain = 0;
 		}
@@ -116,7 +113,7 @@ void Terrain::Buffer() {
 			currentterrain = 1;
 		}
 	}
-	if (((last_distance_travelled) / smalltile_height) < (int)(distance_travelled / smalltile_height)) {
+	/*if (((last_distance_travelled) / smalltile_height) < (int)(distance_travelled / smalltile_height)) {
 		int diff = (int)(distance_travelled / smalltile_height) - ((last_distance_travelled) / smalltile_height);
 		int min = line - diff+1;
 		for (line; line >= min; line--) {
@@ -129,12 +126,12 @@ void Terrain::Buffer() {
 			LoadLine(line-1);
 			last_distance_travelled += (diff)*smalltile_height;
 		}
-	}
+	}*/
 	game->texturemanager->ResetRenderTarget();
 		
 }
 
-void Terrain::AddTexture(const char* texturepath) {
+void Terrain::AddTexture(const char* texturepath, SDL_Color color) {
 	SDL_Surface* mainsurface = game->texturemanager->LoadSurface(texturepath);
 	SDL_Texture* maintexture = game->texturemanager->LoadTexture(texturepath);
 
@@ -191,8 +188,105 @@ void Terrain::AddTexture(const char* texturepath) {
 	}
 	textures.push_back(tempXvec);
 	SDL_SetRenderTarget(renderer, NULL);
+	terrainColors.push_back(color);
 }
 
+void Terrain::AddTerrain(const char* texturepath) {
+	terrainPaths.push_back(texturepath);
+}
+Uint32 getpixel(SDL_Surface* surface, int x, int y)
+{
+	int bpp = surface->format->BytesPerPixel;
+	/* Here p is the address to the pixel we want to retrieve */
+	Uint8* p = (Uint8*)surface->pixels + y * surface->pitch + x * bpp;
+
+	switch (bpp) {
+	case 1:
+		return *p;
+
+	case 2:
+		return *(Uint16*)p;
+
+	case 3:
+		if (SDL_BYTEORDER == SDL_BIG_ENDIAN)
+			return p[0] << 16 | p[1] << 8 | p[2];
+		else
+			return p[0] | p[1] << 8 | p[2] << 16;
+
+	case 4:
+		return *(Uint32*)p;
+
+	default:
+		std::cout << "ERROR, GETPIXEL DEFAULTED" << std::endl;
+		return 0;       /* shouldn't happen, but avoids warnings */
+	}
+}
+void Terrain::LoadTerrainCache(TextureManager texturemanager) {
+	for (int terrain = 0; terrain < terrainPaths.size(); terrain++) {
+		//SDL_Surface* pixelSurface = texturemanager.LoadSurface(terrainPaths[terrain]);
+		SDL_Surface* pixelSurface = SDL_LoadBMP(terrainPaths[terrain]);
+		//SDL_BlitSurface(pixelSurface, NULL, SDL_GetWindowSurface(game->window), NULL);
+		//std::cout << SDL_GetError() << std::endl;
+		//SDL_UpdateWindowSurface(game->window);
+
+
+		terrainCache.push_back(SDL_CreateTexture(renderer, SDL_PIXELFORMAT_UNKNOWN, SDL_TEXTUREACCESS_TARGET, 1920, 1080));
+		//std::cout << "ERROR: " << SDL_GetError() << "W: " << pixelSurface->w << " H: " << pixelSurface->h << std::endl;
+		for (int y = 0; y < pixelSurface->h; y++) {
+			for (int x = 0; x < pixelSurface->w; x++) {
+
+
+				int textureNum = -1;
+				/*pixelSurface = SDL_LoadBMP("Textures/map1.bmp");
+				SDL_LockSurface(pixelSurface);
+				Uint8* pixels = (Uint8*)pixelSurface->pixels;
+				Uint8* pixel = pixels + y * pixelSurface->pitch + x;
+				SDL_GetRGB(pixels[1], pixelSurface->format, &pixel[0], &pixel[1], &pixel[2]);
+				std::cout << "RGB = " << (unsigned int)pixel[0] << (unsigned int)pixel[1] << (unsigned int)pixel[2] << std::endl;
+				SDL_UnlockSurface(pixelSurface);*/
+
+
+
+				Uint32 pixel = getpixel(pixelSurface, x, y);
+				Uint8 pixel_8bit[4];
+				SDL_GetRGB(pixel, pixelSurface->format, &pixel_8bit[0], &pixel_8bit[1], &pixel_8bit[2]);
+				std::cout << "RGB = " << (unsigned int)pixel_8bit[0] << (unsigned int)pixel_8bit[1] << (unsigned int)pixel_8bit[2] << std::endl;
+
+
+
+
+				for (int texture = 0; texture < textures.size(); texture++) {
+					if (pixel_8bit[0] == terrainColors[texture].r && pixel_8bit[1] == terrainColors[texture].g && pixel_8bit[2] == terrainColors[texture].b) {
+						textureNum = texture;
+					}
+
+						//std::cout << "R" << (unsigned int)pixel_8bit[0] << "==" << (unsigned int)terrainColors[texture].r << "=" << (pixel_8bit[0] == terrainColors[texture].r) << std::endl;
+						//std::cout << "g" << (unsigned int)pixel_8bit[1] << "==" << (unsigned int)terrainColors[texture].g << "=" << (pixel_8bit[1] == terrainColors[texture].g) << std::endl;
+						//std::cout << "b" << (unsigned int)pixel_8bit[2] << "==" << (unsigned int)terrainColors[texture].b << "=" << (pixel_8bit[2] == terrainColors[texture].b) << std::endl;
+				}
+
+				if (textureNum == -1) {
+					//std::cout << "ERROR: texture not found with that pixel color!" << "RGB = " << (unsigned int)pixel_8bit[0] << " " << (unsigned int)pixel_8bit[1] << " " << (unsigned int)pixel_8bit[2] << std::endl;
+				}
+				else {
+					//std::cout << "RGB = " << (unsigned int)pixel_8bit[0] << " " << (unsigned int)pixel_8bit[1] << " " << (unsigned int)pixel_8bit[2] << std::endl;
+				}
+				//std::cout << "XY = " << x << " " << y << std::endl;
+
+				SDL_Rect dst = SDL_Rect();
+				int scale = 1920 / 32;
+				dst.x = x * scale;
+				dst.y = y * scale;
+				dst.w = scale;
+				dst.h = scale;
+				std::cout << textureNum << std::endl;
+				texturemanager.CopyTextureToTexture(textures[textureNum][0][0][0], terrainCache[terrain], NULL, &dst);
+				//texturemanager.CopyTextureToTexture(terrainCache[terrain], terrainCache[terrain], NULL, &dst);
+			}
+		}
+	}
+	texturemanager.ResetRenderTarget();
+}
 
 void Terrain::RandomizeTerrain() {
 	for (int terrainnum = 0; terrainnum < 2; terrainnum++) {
@@ -215,12 +309,27 @@ void Terrain::CopyTilesToTexture() {
 		for (int dstrect_x = 0; dstrect_x < tiles_coloumns; dstrect_x++) {
 			int xpart = dstrect_x % tiledivider;
 			for (int terrainnum = 0; terrainnum < 2; terrainnum++) {
-				game->texturemanager->CopyTextureToTexture(textures[tiles[terrainnum][dstrect_x][dstrect_y]][xpart][ypart][rand()%blending_masks.size()], terrain[terrainnum], NULL, &dstrects[dstrect_x][dstrect_y]);
+				game->texturemanager->CopyTextureToTexture(textures[tiles[terrainnum][dstrect_x][dstrect_y]][xpart][ypart][rand()%blending_masks.size()], terrain_BigTextures[terrainnum], NULL, &dstrects[dstrect_x][dstrect_y]);
 			}
 		}
 	}
 
 	game->texturemanager->ResetRenderTarget();
+}
+
+void Terrain::CopyTerrainFromCache(int terrain, TextureManager texturemanager) {
+	//SDL_SetRenderTarget(renderer,terrain_BigTextures[0]);
+	//SDL_SetRenderTarget(renderer,terrain_BigTextures[1]);
+	//terrain_BigTextures[0] = terrainCache[0];
+	//terrain_BigTextures[1] = terrainCache[0];
+	int w, h;
+	SDL_QueryTexture(terrainCache[0], NULL, NULL, &w, &h);
+	terrain_BigTextures[terrain] = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_UNKNOWN, SDL_TEXTUREACCESS_TARGET, w, h);
+	texturemanager.CopyTextureToTexture(terrainCache[0], terrain_BigTextures[terrain], NULL, NULL);
+	terraindsts[terrain].h = h;
+	//texturemanager.CopyTextureToTexture(terrainCache[0], terrain_BigTextures[0], NULL, NULL);
+	//texturemanager.CopyTextureToTexture(terrainCache[0], terrain_BigTextures[1], NULL, NULL);
+	//SDL_RenderCopy(renderer, terrainCache[0], NULL, NULL);
 }
 
 void Terrain::LoadLine(int dstrect_y) {
@@ -229,6 +338,6 @@ void Terrain::LoadLine(int dstrect_y) {
 		int xpart = dstrect_x % tiledivider;
 		//tiles[!currentterrain][dstrect_x][dstrect_y] = rand() % (textures.size());
 		tiles[!currentterrain][dstrect_x][dstrect_y] = dstrect_y%height<height/2;
-		game->texturemanager->CopyTextureToTexture(textures[tiles[!currentterrain][dstrect_x][dstrect_y]][xpart][ypart][!currentterrain], terrain[!currentterrain], NULL, &dstrects[dstrect_x][dstrect_y]);
+		game->texturemanager->CopyTextureToTexture(textures[tiles[!currentterrain][dstrect_x][dstrect_y]][xpart][ypart][!currentterrain], terrain_BigTextures[!currentterrain], NULL, &dstrects[dstrect_x][dstrect_y]);
 	}
 }
